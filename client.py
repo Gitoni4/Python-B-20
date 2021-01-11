@@ -1,4 +1,21 @@
 import socket
+import threading
+
+
+class ClientThread(threading.Thread):
+    def __init__(self, client_address, client_socket):
+        threading.Thread.__init__(self)
+        self.csocket = client_socket
+        print("New connection added: ", client_address)
+
+    def run(self):
+        while True:
+            data = self.csocket.recv(1024).decode()
+            msg = data.decode()
+            if msg == 'bye':
+                break
+            print("from client", msg)
+            self.csocket.send(msg)
 
 
 def client_program():
