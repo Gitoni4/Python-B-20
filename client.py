@@ -1,21 +1,4 @@
 import socket
-import threading
-
-
-class ClientThread(threading.Thread):
-    def __init__(self, client_address, client_socket):
-        threading.Thread.__init__(self)
-        self.csocket = client_socket
-        print("New connection added: ", client_address)
-
-    def run(self):
-        while True:
-            data = self.csocket.recv(1024).decode()
-            msg = data.decode()
-            if msg == 'bye':
-                break
-            print("from client", msg)
-            self.csocket.send(msg)
 
 
 def client_program():
@@ -27,17 +10,21 @@ def client_program():
 
     message = input(" -> ")
 
-    while message.lower().strip() != 'exit':
-        client_socket.send(message.encode())
-        data = client_socket.recv(1024).decode()
-        cpu_option = client_socket.recv(1024).decode()
+    if client_socket.recv(1024).decode() != "Maximum number of clients reached":
+        while message.lower().strip() != 'exit':
+            client_socket.send(message.encode())
+            data = client_socket.recv(1024).decode()
+            cpu_option = client_socket.recv(1024).decode()
 
-        print("CPU's option : " + cpu_option)
-        print(str(data))
+            print("CPU's option : " + cpu_option)
+            print(str(data))
 
-        message = input(" -> ")
+            message = input(" -> ")
 
-    client_socket.close()
+        client_socket.close()
+    else:
+        print("Maximum number of clients reached")
+        client_socket.close()
 
 
 if __name__ == '__main__':

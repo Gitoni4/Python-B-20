@@ -2,14 +2,23 @@ import socket
 import random
 import threading
 
+number_clients = 0
+in_game = 0
+
 
 class ClientThread(threading.Thread):
     def __init__(self, client_address, client_socket):
+        global number_clients
         threading.Thread.__init__(self)
         self.csocket = client_socket
+        number_clients = number_clients + 1
+        self.number = number_clients
         print("New connection added: ", client_address)
 
     def run(self):
+        global number_clients
+        global in_game
+
         while True:
             data = self.csocket.recv(1024).decode()
             if not data:
@@ -36,6 +45,7 @@ class ClientThread(threading.Thread):
             self.csocket.send(result.encode())
             self.csocket.send(options[option_number].encode())
 
+        number_clients = number_clients - 1
         self.csocket.close()
 
 
@@ -88,6 +98,9 @@ def check_win_spock(option):
 
 
 def server_program():
+    global number_clients
+    global in_game
+
     host = socket.gethostname()
     port = 5000
 
@@ -97,38 +110,19 @@ def server_program():
 
     while True:
         server_socket.listen(3)
-        conn, address = server_socket.accept()
+        if in_game == 0:
+            conn, address = server_socket.accept()
 
-        print("Connection from: " + str(address))
+            if number_clients < 3:
+                print("Connection from: " + str(address))
 
-        new_thread = ClientThread(address, conn)
-        new_thread.start()
-    #     data = conn.recv(1024).decode()
-    #     if not data:
-    #         break
-    #     print("User's option: " + str(data))
-    #
-    #     option_number = random.randrange(0, 4)
-    #
-    #     print("CPU's option: " + options[option_number])
-    #
-    #     if str(data) == "rock" or str(data) == "Rock":
-    #         result = check_win_rock(options[option_number])
-    #     elif str(data) == "paper" or str(data) == "Paper":
-    #         result = check_win_paper(options[option_number])
-    #     elif str(data) == "scissors" or str(data) == "Scissors":
-    #         result = check_win_scissors(options[option_number])
-    #     elif str(data) == "lizard" or str(data) == "Lizard":
-    #         result = check_win_lizard(options[option_number])
-    #     elif str(data) == "spock" or str(data) == "Spock":
-    #         result = check_win_spock(options[option_number])
-    #     else:
-    #         result = "This option is unavailable"
-    #
-    #     conn.send(result.encode())
-    #     conn.send(options[option_number].encode())
-    #
-    # conn.close()
+                new_thread = ClientThread(address, conn)
+                new_thread.start()
+            else:
+                print("Maximum number of clients reached")
+                conn.send("Maximum number of clients reached".encode())
+
+                conn.close()
 
 
 if __name__ == '__main__':
