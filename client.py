@@ -13,8 +13,10 @@ def client_program():
     while message.lower().strip() != 'exit':
         client_socket.send(message.encode())
         data = client_socket.recv(1024).decode()
+        cpu_option = client_socket.recv(1024).decode()
 
-        print('Received from server: ' + data)
+        print("CPU's option : " + cpu_option)
+        print(str(data))
 
         message = input(" -> ")
 
