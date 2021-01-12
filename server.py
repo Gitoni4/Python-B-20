@@ -21,7 +21,6 @@ class ClientThread(threading.Thread):
         global number_clients
         global in_game
         global win
-        global lose
 
         while win == 0:
             if in_game == 0:
@@ -55,13 +54,12 @@ class ClientThread(threading.Thread):
 
                     if result == "You lose":
                         in_game = 0
-                        lose += 1
+                        self.csocket.close()
                         break
                     elif result == "You win":
                         win = 1
+                        self.csocket.close()
                         break
-
-        self.csocket.close()
 
 
 options = ["rock", "paper", "scissors", "lizard", "spock"]
@@ -143,13 +141,6 @@ def server_program():
             conn.send("Maximum number of clients reached".encode())
 
             conn.close()
-
-        message = input(" -> ")
-        if message == "Reset":
-            number_clients = 0
-            win = 0
-            lose = 0
-            in_game = 0
 
 
 if __name__ == '__main__':

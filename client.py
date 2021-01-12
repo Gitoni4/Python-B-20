@@ -17,9 +17,6 @@ def client_program():
     elif turn == "Maximum number of clients reached":
         print("Maximum number of clients reached")
         turn = "OUT"
-    elif turn == "The game is over":
-        print("The game is over")
-        turn = "OUT"
 
     while message.lower().strip() != 'exit' and turn != "OUT":
         client_socket.send(message.encode())
