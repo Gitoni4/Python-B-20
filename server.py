@@ -4,6 +4,8 @@ import threading
 
 number_clients = 0
 in_game = 0
+win = 0
+lose = 0
 
 
 class ClientThread(threading.Thread):
@@ -18,34 +20,47 @@ class ClientThread(threading.Thread):
     def run(self):
         global number_clients
         global in_game
+        global win
+        global lose
 
-        while True:
-            data = self.csocket.recv(1024).decode()
-            if not data:
-                break
-            print("User's option: " + str(data))
+        while win == 0:
+            if in_game == 0:
+                self.csocket.send("Your turn".encode())
+                in_game = 1
+                while True:
+                    data = self.csocket.recv(1024).decode()
+                    if not data:
+                        break
+                    print("User's option: " + str(data))
 
-            option_number = random.randrange(0, 4)
+                    option_number = random.randrange(0, 4)
 
-            print("CPU's option: " + options[option_number])
+                    print("CPU's option: " + options[option_number])
 
-            if str(data) == "rock" or str(data) == "Rock":
-                result = check_win_rock(options[option_number])
-            elif str(data) == "paper" or str(data) == "Paper":
-                result = check_win_paper(options[option_number])
-            elif str(data) == "scissors" or str(data) == "Scissors":
-                result = check_win_scissors(options[option_number])
-            elif str(data) == "lizard" or str(data) == "Lizard":
-                result = check_win_lizard(options[option_number])
-            elif str(data) == "spock" or str(data) == "Spock":
-                result = check_win_spock(options[option_number])
-            else:
-                result = "This option is unavailable"
+                    if str(data) == "rock" or str(data) == "Rock":
+                        result = check_win_rock(options[option_number])
+                    elif str(data) == "paper" or str(data) == "Paper":
+                        result = check_win_paper(options[option_number])
+                    elif str(data) == "scissors" or str(data) == "Scissors":
+                        result = check_win_scissors(options[option_number])
+                    elif str(data) == "lizard" or str(data) == "Lizard":
+                        result = check_win_lizard(options[option_number])
+                    elif str(data) == "spock" or str(data) == "Spock":
+                        result = check_win_spock(options[option_number])
+                    else:
+                        result = "This option is unavailable"
 
-            self.csocket.send(result.encode())
-            self.csocket.send(options[option_number].encode())
+                    self.csocket.send(result.encode())
+                    self.csocket.send(options[option_number].encode())
 
-        number_clients = number_clients - 1
+                    if result == "You lose":
+                        in_game = 0
+                        lose += 1
+                        break
+                    elif result == "You win":
+                        win = 1
+                        break
+
         self.csocket.close()
 
 
@@ -97,9 +112,14 @@ def check_win_spock(option):
         return "Draw"
 
 
+threads = []
+
+
 def server_program():
     global number_clients
     global in_game
+    global win
+    global lose
 
     host = socket.gethostname()
     port = 5000
@@ -110,19 +130,26 @@ def server_program():
 
     while True:
         server_socket.listen(3)
-        if in_game == 0:
-            conn, address = server_socket.accept()
+        conn, address = server_socket.accept()
 
-            if number_clients < 3:
-                print("Connection from: " + str(address))
+        if number_clients < 3:
+            print("Connection from: " + str(address))
 
-                new_thread = ClientThread(address, conn)
-                new_thread.start()
-            else:
-                print("Maximum number of clients reached")
-                conn.send("Maximum number of clients reached".encode())
+            new_thread = ClientThread(address, conn)
+            threads.append(new_thread)
+            new_thread.start()
+        elif win == 0:
+            print("Maximum number of clients reached")
+            conn.send("Maximum number of clients reached".encode())
 
-                conn.close()
+            conn.close()
+
+        message = input(" -> ")
+        if message == "Reset":
+            number_clients = 0
+            win = 0
+            lose = 0
+            in_game = 0
 
 
 if __name__ == '__main__':
