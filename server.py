@@ -110,9 +110,6 @@ def check_win_spock(option):
         return "Draw"
 
 
-threads = []
-
-
 def server_program():
     global number_clients
     global in_game
@@ -134,7 +131,6 @@ def server_program():
             print("Connection from: " + str(address))
 
             new_thread = ClientThread(address, conn)
-            threads.append(new_thread)
             new_thread.start()
         elif win == 0:
             print("Maximum number of clients reached")
